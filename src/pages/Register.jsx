@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, User, Mail, Phone, Shield, Lock, ChevronDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { authAPI } from '../services/api';
 
 const Register = () => {
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
 
     const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -67,19 +69,33 @@ const Register = () => {
 
         setIsLoading(true);
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            console.log("Register submitted:", formData);
-            alert("Account created successfully!");
+            // Send data to backend API
+            const response = await authAPI.register({
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+                role: formData.role,
+                password: formData.password,
+            });
+
+            console.log("Registration successful:", response);
+            alert("Account created successfully! Please login.");
+
+            // Clear form and redirect to login
             setFormData({
                 name: "",
                 email: "",
                 phone: "",
                 role: "",
                 password: "",
-
             });
-        } catch (err) {
-            alert("Something went wrong");
+
+            // Redirect to login page
+            navigate('/login');
+
+        } catch (error) {
+            console.error("Registration failed:", error);
+            alert(error.message || "Registration failed. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -229,19 +245,8 @@ const Register = () => {
                     </div>
                     {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
                 </div>
-
                 {/* Confirm Password */}
-                <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                        <Lock className="h-4 w-4 text-blue-600" />
-                        Confirm Password
-                    </label>
-                    <div className="relative">
 
-
-                    </div>
-
-                </div>
 
                 {/* Submit */}
                 <button

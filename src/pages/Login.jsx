@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { authAPI } from '../services/api';
 
 const Login = () => {
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({ email: "", password: "" });
     const [errors, setErrors] = useState({});
@@ -34,12 +36,41 @@ const Login = () => {
 
         setIsLoading(true);
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            console.log("Login submitted:", formData);
+            // Send data to backend API
+            const response = await authAPI.login({
+                email: formData.email,
+                password: formData.password,
+            });
+
+            console.log("Login successful:", response);
             alert("Login successful!");
+
+            // Clear form
             setFormData({ email: "", password: "" });
-        } catch (err) {
-            alert("Something went wrong");
+
+            // Redirect based on user role or to a default dashboard
+            // You can modify this based on the response from your backend
+            if (response.user && response.user.role) {
+                switch (response.user.role) {
+                    case 'admin':
+                        navigate('/admin/dashboard');
+                        break;
+                    case 'organiser':
+                        navigate('/organizer/dashboard');
+                        break;
+                    case 'student':
+                        navigate('/student/dashboard');
+                        break;
+                    default:
+                        navigate('/');
+                }
+            } else {
+                navigate('/');
+            }
+
+        } catch (error) {
+            console.error("Login failed:", error);
+            alert(error.message || "Login failed. Please check your credentials.");
         } finally {
             setIsLoading(false);
         }
